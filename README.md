@@ -8,7 +8,7 @@
 
 ## Why This Exists
 
-Most household 3D-printing work does not need a full professional CAD suite. It needs fast primitives, exact millimeter dimensions, reliable holes, simple boolean operations, templates, and export that slicers understand.
+Most household 3D-printing work does not need a full professional CAD suite. It needs fast primitives, exact millimeter dimensions, reliable holes, direct modeling tools, simple boolean operations, and export that slicers understand.
 
 3D Tools CAD aims to be a simpler Fusion 360-style workflow in the browser:
 
@@ -23,11 +23,12 @@ Most household 3D-printing work does not need a full professional CAD suite. It 
 | Area | Status |
 | --- | --- |
 | Browser app | Vite + React + TypeScript |
+| UI model | Workspace tabs for Sketch, Solid, Arrange, Inspect |
 | 3D viewport | three.js with orbit and fly navigation |
 | Modeling units | Millimeters in CAD state and UI |
 | Primitives | Box, rounded box, cylinder, tube, sphere, wedge, text |
 | Hole objects | Screw hole, slot, magnet pocket |
-| Templates | Box + lid, hook, L bracket, cable clip, organizer |
+| Solid tools | Extrude operations, contextual Press Pull, basic Fillet |
 | Transforms | Move, rotate, scale, duplicate, mirror, repeat |
 | Layout tools | Align and distribute helpers |
 | Boolean kernel | Manifold WASM with mesh-CSG fallback |
@@ -35,7 +36,7 @@ Most household 3D-printing work does not need a full professional CAD suite. It 
 | Export | 3MF, STL, OBJ, project JSON |
 | Print checks | Thin details, below-bed objects, open edges, non-manifold edges, heavy meshes, overhang hints |
 | History | Undo / redo |
-| Tests | Vitest suite registry with 82 tests |
+| Tests | Vitest suite registry with 87 tests |
 
 ## Quick Start
 
@@ -64,22 +65,28 @@ npm test
 
 ## Core Workflow
 
-1. Add a solid primitive or template.
-2. Set exact size and position in millimeters.
-3. Add hole objects for screw holes, slots, pockets, or cutouts.
-4. Choose boolean mode, usually `Subtract holes`.
-5. Export directly or use `Bake boolean result`.
-6. Run printability checks before slicing.
-7. Save editable work as project JSON.
+1. Start from the empty workspace.
+2. Start in `Sketch` for thin profiles or `Solid` for 3D primitives.
+3. Set exact size and position in millimeters.
+4. Use `Extrude`, `Press Pull`, or `Fillet` to shape the selected form.
+5. Add hole objects for screw holes, slots, pockets, or cutouts.
+6. Choose boolean mode, usually `Subtract holes`.
+7. Export directly or use `Bake boolean result`.
+8. Run printability checks before slicing.
+9. Save editable work as project JSON.
 
 ## Navigation
 
-- `G`: move
+- `M`: move
+- `G`: move legacy alias
 - `R`: rotate
 - `S`: scale
-- `F`: orbit/fly mode
+- `E`: extrude selected
+- `Q`: press-pull selected
+- `F`: fillet selected
+- `~`: orbit/fly mode
 - `W / A / S / D`: fly movement
-- `Q / E`: fly down/up
+- `Q / E`: fly down/up while Fly mode is active
 - `Shift`: faster fly
 - `Delete`: delete selected
 - `Ctrl+D`: duplicate
@@ -102,6 +109,7 @@ docs/         User and developer documentation
 - [Documentation hub](./docs/README.md)
 - [User guide](./docs/user-guide.md)
 - [Architecture](./docs/architecture.md)
+- [Fusion-inspired tool model](./docs/fusion-tool-model.md)
 - [Geometry kernel](./docs/geometry-kernel.md)
 - [File formats and export](./docs/file-formats.md)
 - [Printability](./docs/printability.md)
@@ -123,7 +131,7 @@ The suite registry lives in:
 src/test/testRegistry.ts
 ```
 
-Current coverage includes CAD object creation, geometry generation, printability analysis, mesh serialization, store actions/history, exporters, unit conversion, and registry integrity.
+Current coverage includes CAD object creation, geometry generation, printability analysis, mesh serialization, store actions/history, Fusion-inspired store commands, exporters, unit conversion, and registry integrity.
 
 ## Documentation Rule
 

@@ -1,38 +1,98 @@
-# Руководство пользователя
+# User Guide
 
-## Назначение
+## Purpose
 
-3D Tools CAD помогает быстро собрать бытовую 3D-печатную модель: крепёж, держатель, коробку, крышку, органайзер, бирку, простую декоративную форму или техническую деталь с отверстиями.
+3D Tools CAD helps build practical 3D-printable parts in a browser: brackets, holders, boxes, lids, labels, fixtures, slots, pockets, and technical parts with holes.
 
-Инструмент не пытается быть Fusion 360 целиком. Он закрывает практичный минимум: примитивы, точные размеры, hole-объекты, boolean, шаблоны, экспорт и базовую проверку печати.
+The workspace starts empty by design. The user chooses what to create instead of being dropped into preset demo geometry.
 
-## Интерфейс
+## Interface
 
-Экран разделён на три зоны:
+The interface follows a Fusion 360-like CAD layout:
 
-- Левая панель: добавление примитивов, hole-объектов, шаблонов, импорт, transform-инструменты, snap.
-- Центр: 3D viewport.
-- Правая панель: инспектор выбранного объекта, список объектов, проверка печати, экспорт, горячие клавиши.
+- Top title bar: project actions, undo/redo, open/save JSON.
+- Workspace tabs: Sketch, Solid, Arrange, Inspect.
+- Compact ribbon: only the active workspace tools are shown.
+- Left Browser: object tree/outliner.
+- Center Viewport: 3D workspace, grid, camera controls, transform gizmo.
+- Right Inspector: exact parameters, printability results, delete action.
 
-## Навигация
+There is no preset library. New designs begin from a blank scene and explicit modeling tools.
 
-Orbit mode используется по умолчанию:
+## Empty Workspace
 
-- Мышь: вращение вокруг модели.
-- Колесо: zoom.
-- Правая кнопка или trackpad pan, если это поддерживает браузер/устройство.
+On launch:
 
-Fly mode включается кнопкой в HUD или клавишей `F`:
+- there are no objects;
+- nothing is selected;
+- Browser shows an empty design hint;
+- Viewport shows a start hint.
 
-- `W / A / S / D`: движение.
-- `Q / E`: вниз/вверх.
-- `Shift`: ускорение.
+Start by adding a primitive, importing SVG, or opening a project JSON.
 
-## Добавление объектов
+## Navigation
 
-### Примитивы
+Orbit mode is the default:
 
-Доступны:
+- Mouse drag: orbit.
+- Wheel: zoom.
+- Pan depends on browser/device input support.
+
+Fly mode is toggled with `~` or the HUD button:
+
+- `W / A / S / D`: movement.
+- `Q / E`: down/up in fly mode.
+- `Shift`: faster movement.
+
+## Workspace Tabs
+
+### Sketch
+
+Sketch is the schematic/prototyping workspace. It creates thin editable profiles first:
+
+- Rectangle profile
+- Circle profile
+- Slot profile
+- Text profile
+- SVG profile import
+
+Use `Extrude` or `Cut profile` to turn these profiles into solid or cutter geometry.
+
+### Solid
+
+Solid is the 3D modeling workspace. It contains:
+
+- solid primitives;
+- hole/cutter objects;
+- Extrude;
+- Press Pull;
+- Fillet.
+
+### Arrange
+
+Arrange contains object layout tools:
+
+- Move
+- Rotate
+- Scale
+- Duplicate
+- Mirror
+- Pattern
+- Align
+- Distribute
+
+### Inspect
+
+Inspect contains validation and output tools:
+
+- printability check;
+- boolean mode;
+- bake;
+- 3MF/STL/OBJ/project export.
+
+## Create Tools
+
+Solid primitives:
 
 - Box
 - Rounded box
@@ -42,128 +102,125 @@ Fly mode включается кнопкой в HUD или клавишей `F`:
 - Wedge
 - Text
 
-Каждый объект создаётся как параметрический CAD object. Его можно выбрать, перемещать, менять размеры, поворот, цвет и роль.
-
-### Hole-объекты
-
-Доступны:
+Cutters:
 
 - Screw hole
 - Slot
 - Magnet pocket
 
-Hole-объекты отображаются в сцене как полупрозрачные cutters. При export/bake они применяются через выбранный boolean mode.
+Cutters are regular CAD objects with role `hole`. They appear as translucent cutter geometry and are applied during export/bake through the boolean pipeline.
 
-Обычный workflow:
+## Solid Modify Tools
 
-1. Создай solid-объект.
-2. Добавь hole-объект.
-3. Перемести hole в нужное место.
-4. Выбери `Subtract holes`.
-5. Экспортируй модель или нажми `Bake boolean result`.
+### Extrude
 
-### Шаблоны
+`Extrude` creates a distance-based extrusion from the selected profile/body.
 
-Доступны стартовые шаблоны:
+Shortcut:
 
-- Box + lid
-- Hook
-- L bracket
-- Cable clip
-- Organizer
+- `E`
 
-Шаблоны создают несколько объектов сразу. Их можно редактировать как обычные элементы сцены.
+Options:
 
-## Трансформации
+- `New Body`: keeps the result as a solid.
+- `Join`: currently behaves as a solid result until true target-body joining is implemented.
+- `Cut`: converts the selected result to a hole object for boolean subtract.
+- `Intersect`: currently keeps the result as a solid placeholder until target/tool selection is implemented.
 
-Основные режимы:
+Positive distances extrude upward from the object's current bottom plane. Negative distances extrude in the opposite direction.
 
-- `Move`
-- `Rotate`
-- `Scale`
+### Press Pull
 
-Горячие клавиши:
+`Press Pull` is context-based:
 
-- `G`: move
+- `Profile extrude`: routes to Extrude behavior.
+- `Face offset`: changes the selected X/Y/Z dimension and shifts the center by half the delta.
+- `Edge round`: changes the bevel/fillet radius on supported objects.
+
+Shortcut:
+
+- `Q`
+
+### Fillet
+
+`Fillet` rounds supported box-like edges.
+
+Shortcut:
+
+- `F`
+
+Current implementation converts boxes to rounded boxes or edits the bevel on rounded boxes, text, and SVG objects. True edge-picking is still planned.
+
+## Transform Tools
+
+- Move
+- Rotate
+- Scale
+- Duplicate
+- Mirror X
+- Pattern X
+- Align X
+- Align Bed
+- Distribute
+
+Hotkeys:
+
+- `M`: move
+- `G`: move legacy alias
 - `R`: rotate
 - `S`: scale
-- `Delete`: удалить
+- `Delete`: delete selected
 - `Ctrl+D`: duplicate
 - `Ctrl+Z`: undo
 - `Ctrl+Y`: redo
 - `Ctrl+Shift+Z`: redo
 
-## Точные размеры
+## Exact Parameters
 
-В инспекторе выбранного объекта доступны:
+The Inspector edits:
 
+- Name
+- Role
 - Position mm
 - Size mm
 - Rotation deg
-- Role
 - Color
-- Дополнительные параметры: bevel, inner radius, text, SVG markup
+- Bevel for supported objects
+- Inner radius for tube
+- Text content
+- SVG markup
 
-Все значения размеров и позиций задаются в миллиметрах.
+All user-facing dimensions are millimeters.
 
-## Align, distribute, repeat
-
-Доступны быстрые операции:
-
-- Align X
-- Align bed
-- Distribute X
-- Distribute Z
-- Repeat X
-- Repeat Z
-- Mirror X
-
-Сейчас эти операции реализованы как быстрые кнопки. В дальнейшем стоит добавить диалог параметров для count/gap/axis.
-
-## Импорт
+## Import
 
 ### SVG
 
-SVG импортируется как extruded объект. Контур становится редактируемым объектом `svg`.
+SVG contours become extruded editable `svg` objects.
 
-Рекомендации:
+Recommendations:
 
-- Используй простые замкнутые path-контуры.
-- Избегай очень сложных SVG с тысячами точек.
-- После импорта настрой `Size mm`, `Bevel` и `Position mm`.
+- use simple closed paths;
+- avoid highly complex SVGs with thousands of points;
+- inspect and resize after import.
 
 ### Project JSON
 
-Project JSON хранит CAD objects проекта. Это основной формат для сохранения редактируемой сцены.
+Project JSON is the editable project format. Use it to preserve CAD object parameters before baking.
 
-## Export и Bake
+## Export and Bake
 
-### Boolean mode
+Boolean modes:
 
-Для hole-объектов доступны режимы:
+- `Subtract holes`
+- `Union holes`
+- `Intersect holes`
 
-- `Subtract holes`: основной режим для отверстий, пазов, карманов.
-- `Union holes`: добавляет hole-объекты к модели.
-- `Intersect holes`: оставляет только пересечение.
+Export formats:
 
-### Export
+- `3MF`: preferred for printing.
+- `STL`: slicer compatibility.
+- `OBJ`: mesh workflow compatibility.
+- `Project JSON`: editable project state.
 
-Доступны:
-
-- `3MF`: предпочтительный формат для печати.
-- `STL`: совместимость со слайсерами.
-- `OBJ`: совместимость с mesh-инструментами.
-- `Project`: редактируемый JSON проекта.
-
-### Bake boolean result
-
-`Bake boolean result` применяет boolean pipeline и заменяет сцену одним baked mesh object.
-
-Используй bake, когда нужно:
-
-- зафиксировать отверстия;
-- проверить итоговую геометрию;
-- продолжить моделирование от результата boolean-операций;
-- упростить сцену перед экспортом.
-
-После bake параметрическая история исходных объектов заменяется baked mesh. Перед bake полезно сохранить Project JSON.
+`Bake boolean result` applies the boolean pipeline and replaces the scene with one baked mesh object. Save Project JSON before baking if you want to preserve parametric objects.

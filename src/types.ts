@@ -22,12 +22,15 @@ export type BooleanOperation = 'union' | 'subtract' | 'intersect';
 export type TransformMode = 'translate' | 'rotate' | 'scale';
 export type CameraMode = 'orbit' | 'fly';
 export type Axis = 'x' | 'y' | 'z';
+export type ModelingOperation = 'extrude' | 'pressPull';
+export type ExtrudeOperation = 'newBody' | 'join' | 'cut' | 'intersect';
+export type PressPullTarget = 'profile' | 'face' | 'edge';
 
 export type CadObject = {
   id: string;
   name: string;
   kind: PrimitiveKind;
-  role: 'solid' | 'hole' | 'template';
+  role: 'solid' | 'hole' | 'reference';
   position: Vec3;
   rotation: Vec3;
   scale: Vec3;
@@ -55,10 +58,3 @@ export type PrintIssue = {
   severity: 'info' | 'warning' | 'error';
   message: string;
 };
-
-export type TemplateKind =
-  | 'boxWithLid'
-  | 'hook'
-  | 'lBracket'
-  | 'cableClip'
-  | 'organizerTray';

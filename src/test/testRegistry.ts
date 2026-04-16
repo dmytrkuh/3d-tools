@@ -38,7 +38,7 @@ export const testSuites: TestSuiteDefinition[] = [
   {
     area: 'Store actions',
     file: 'store-actions.test.ts',
-    covers: ['selection', 'add/import/update/delete', 'duplicate', 'mirror', 'repeat', 'align', 'distribute'],
+    covers: ['empty workspace', 'selection', 'add/import/update/delete', 'duplicate', 'mirror', 'repeat', 'extrude operations', 'press-pull targets', 'fillet', 'align', 'distribute'],
   },
   {
     area: 'Store history',

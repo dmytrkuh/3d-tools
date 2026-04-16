@@ -1,16 +1,22 @@
 # Roadmap
 
-## Сейчас реализовано
+## Implemented
 
-- Vite + React + TypeScript приложение.
+- Vite + React + TypeScript app.
+- Fusion-like shell with title bar, ribbon, Browser, Viewport, and Inspector.
+- Workspace tabs: Sketch, Solid, Arrange, Inspect.
+- Compact active-workspace ribbon.
+- Empty workspace on launch.
 - three.js viewport.
-- CAD objects в миллиметрах.
-- Примитивы: box, rounded box, cylinder, tube, sphere, wedge, text.
-- Hole-объекты: screw hole, slot, magnet pocket.
+- CAD objects in millimeters.
+- Primitives: box, rounded box, cylinder, tube, sphere, wedge, text.
+- Hole objects: screw hole, slot, magnet pocket.
 - SVG import.
 - Project JSON import/export.
-- Templates: box + lid, hook, L bracket, cable clip, organizer.
 - Move/rotate/scale.
+- Fusion-inspired Extrude with operation selector.
+- Context Press Pull: profile, face offset, edge round.
+- Basic Fillet command for supported objects.
 - Duplicate, mirror, repeat.
 - Align/distribute helpers.
 - Orbit/fly navigation.
@@ -20,31 +26,35 @@
 - Export 3MF/STL/OBJ.
 - Basic printability check.
 - Undo/redo.
-- Vitest automated tests in `src/test/suites`: 9 suite files covering core CAD modules, store actions/history, exporters, geometry, printability, serialization, units, and registry integrity.
+- Vitest automated tests in `src/test/suites`.
 
-## Ближайший этап
+## Next High-Impact UX Work
 
-- UI для параметров repeat: axis/count/gap.
-- Mirror по X/Y/Z и mirror plane.
-- Align/distribute controls с выбором side/axis.
-- Object visibility/lock.
-- Grouping.
-- Better fly mouse look.
-- Numpad views: top/front/right.
+- Sketch mode with 2D profiles.
+- True sketch-profile extrusion.
+- Face selection.
 - Workplane presets: XY/XZ/YZ.
 - Place-on-face workflow.
+- Press-pull by actual selected face normal.
+- True target/tool body selection for Join/Cut/Intersect.
+- Configurable pattern dialog: axis/count/gap.
+- Mirror by X/Y/Z and mirror plane.
+- Object visibility/lock.
+- Grouping.
+- Better object outliner.
+- Numpad views: top/front/right.
 
-## Геометрия
+## Geometry
 
-- Настоящие chamfer/fillet operations для выбранных объектов.
-- Screw presets: M2/M3/M4/M5 clearance/countersink.
-- Magnet presets.
-- Thread-like visual/template objects.
+- Real chamfer/fillet operations.
+- Screw clearance presets.
+- Magnet pocket presets.
+- Thread-like visual objects.
 - Better text layout and font support.
 - More robust SVG cleanup.
 - Mesh simplification after bake.
 
-## Проверка печати
+## Printability
 
 - Overhang angle analysis.
 - Minimum wall thickness sampling.
@@ -54,27 +64,17 @@
 - Bounding box summary.
 - Material/printer profile presets.
 
-## Форматы
+## Formats
 
 - GLB export.
 - 3MF metadata improvements.
 - Import STL/OBJ as mesh object.
 - Project version migration.
 
-## UX polishing
-
-- Command palette.
-- Context menu.
-- Better object outliner.
-- Editable hotkeys.
-- Measurement tool.
-- Ruler/grid overlays.
-- Status bar with selected dimensions.
-
-## Не в приоритете
+## Not In Scope Yet
 
 - NURBS.
-- Профессиональная feature history как в Fusion 360.
-- Реалистичный рендер.
-- Анимация.
-- FEM/нагрузочные симуляции.
+- Professional feature history like Fusion 360.
+- Photoreal rendering.
+- Animation.
+- FEM/load simulation.

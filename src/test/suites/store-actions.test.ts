@@ -3,18 +3,27 @@ import { createCadObject } from '../../lib/cadObjects';
 import { loadFreshStore } from '../helpers/storeTestUtils';
 
 const context = await loadFreshStore();
-const { useCadStore, initialObjects, resetStore } = context;
+const { useCadStore, resetStore } = context;
+
+function seedOne() {
+  useCadStore.getState().addPrimitive('box');
+  return useCadStore.getState().selectedIds[0];
+}
 
 describe('store actions suite', () => {
   beforeEach(() => resetStore());
 
-  it('adds all templates and selects their created objects', () => {
-    for (const template of ['boxWithLid', 'hook', 'lBracket', 'cableClip', 'organizerTray'] as const) {
-      resetStore();
-      useCadStore.getState().addTemplate(template);
-      expect(useCadStore.getState().selectedIds.length).toBeGreaterThanOrEqual(2);
-      expect(useCadStore.getState().objects.length).toBeGreaterThan(initialObjects.length);
-    }
+  it('starts from an empty workspace', () => {
+    expect(useCadStore.getState().objects).toEqual([]);
+    expect(useCadStore.getState().selectedIds).toEqual([]);
+  });
+
+  it('adds primitives and selects the new object', () => {
+    useCadStore.getState().addPrimitive('cylinder');
+    const selected = useCadStore.getState().objects.find((object) => object.id === useCadStore.getState().selectedIds[0]);
+
+    expect(useCadStore.getState().objects).toHaveLength(1);
+    expect(selected?.kind).toBe('cylinder');
   });
 
   it('adds imported SVG as selected SVG object', () => {
@@ -41,7 +50,9 @@ describe('store actions suite', () => {
   });
 
   it('supports selection append, toggle, and clear', () => {
-    const [first, second] = useCadStore.getState().objects;
+    const first = createCadObject('box');
+    const second = createCadObject('sphere');
+    resetStore([first, second], [first.id]);
 
     useCadStore.getState().selectObject(second.id);
     expect(useCadStore.getState().selectedIds).toEqual([second.id]);
@@ -57,7 +68,7 @@ describe('store actions suite', () => {
   });
 
   it('updates objects with snap and clamp normalization', () => {
-    const selectedId = useCadStore.getState().selectedIds[0];
+    const selectedId = seedOne();
     useCadStore.getState().updateObject(selectedId, {
       position: { x: 10.4, y: 20.6, z: 30.5 },
       dimensions: { x: -10, y: 0, z: 4 },
@@ -69,7 +80,7 @@ describe('store actions suite', () => {
   });
 
   it('updates selected object and no-ops without selection', () => {
-    const selectedId = useCadStore.getState().selectedIds[0];
+    const selectedId = seedOne();
     useCadStore.getState().updateSelectedObject({ name: 'Renamed' });
     expect(useCadStore.getState().objects.find((object) => object.id === selectedId)?.name).toBe('Renamed');
 
@@ -80,17 +91,18 @@ describe('store actions suite', () => {
   });
 
   it('deletes and duplicates selected objects', () => {
+    seedOne();
     useCadStore.getState().duplicateSelected();
-    expect(useCadStore.getState().objects).toHaveLength(initialObjects.length + 1);
+    expect(useCadStore.getState().objects).toHaveLength(2);
     expect(useCadStore.getState().selectedIds).toHaveLength(1);
 
     useCadStore.getState().deleteSelected();
-    expect(useCadStore.getState().objects).toHaveLength(initialObjects.length);
+    expect(useCadStore.getState().objects).toHaveLength(1);
     expect(useCadStore.getState().selectedIds).toEqual([]);
   });
 
   it('mirrors selected objects on each axis', () => {
-    const selectedId = useCadStore.getState().selectedIds[0];
+    const selectedId = seedOne();
     useCadStore.getState().mirrorSelected('x');
     useCadStore.getState().mirrorSelected('y');
     useCadStore.getState().mirrorSelected('z');
@@ -100,6 +112,7 @@ describe('store actions suite', () => {
   });
 
   it('repeats selected objects with gap and guards count below two', () => {
+    seedOne();
     const before = useCadStore.getState().objects.length;
     useCadStore.getState().repeatSelected('x', 1, 8);
     expect(useCadStore.getState().objects).toHaveLength(before);
@@ -107,6 +120,56 @@ describe('store actions suite', () => {
     useCadStore.getState().repeatSelected('x', 4, 8);
     expect(useCadStore.getState().objects).toHaveLength(before + 3);
     expect(useCadStore.getState().selectedIds).toHaveLength(4);
+  });
+
+  it('extrudes selected profiles by distance and supports cut role', () => {
+    const selectedId = seedOne();
+    const before = useCadStore.getState().objects.find((object) => object.id === selectedId)!;
+
+    useCadStore.getState().extrudeSelected(12, 'cut');
+    const after = useCadStore.getState().objects.find((object) => object.id === selectedId)!;
+
+    expect(after.dimensions.y).toBe(12);
+    expect(after.position.y).toBe(before.position.y - before.dimensions.y / 2 + 6);
+    expect(after.role).toBe('hole');
+  });
+
+  it('press-pulls faces by axis and profiles through extrude behavior', () => {
+    const selectedId = seedOne();
+    const before = useCadStore.getState().objects.find((object) => object.id === selectedId)!;
+
+    useCadStore.getState().pressPullSelected(7, 'face', 'z');
+    let after = useCadStore.getState().objects.find((object) => object.id === selectedId)!;
+    expect(after.dimensions.z).toBe(before.dimensions.z + 7);
+    expect(after.position.z).toBe(before.position.z + 3.5);
+
+    useCadStore.getState().pressPullSelected(9, 'profile', 'y');
+    after = useCadStore.getState().objects.find((object) => object.id === selectedId)!;
+    expect(after.dimensions.y).toBe(9);
+  });
+
+  it('guards extrude for spheres and invalid press-pull distances', () => {
+    useCadStore.getState().addPrimitive('sphere');
+    const selectedId = useCadStore.getState().selectedIds[0];
+    const before = structuredClone(useCadStore.getState().objects.find((object) => object.id === selectedId));
+
+    useCadStore.getState().extrudeSelected(10);
+    useCadStore.getState().pressPullSelected(Number.NaN);
+
+    expect(useCadStore.getState().objects.find((object) => object.id === selectedId)).toEqual(before);
+  });
+
+  it('rounds box edges through fillet and press-pull edge mode', () => {
+    const selectedId = seedOne();
+
+    useCadStore.getState().filletSelected(3);
+    let selected = useCadStore.getState().objects.find((object) => object.id === selectedId)!;
+    expect(selected.kind).toBe('roundedBox');
+    expect(selected.bevel).toBe(3);
+
+    useCadStore.getState().pressPullSelected(2, 'edge', 'y');
+    selected = useCadStore.getState().objects.find((object) => object.id === selectedId)!;
+    expect(selected.bevel).toBe(5);
   });
 
   it('aligns selected objects by side and distributes centers', () => {

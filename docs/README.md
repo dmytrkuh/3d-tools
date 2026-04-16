@@ -1,30 +1,32 @@
-# Документация 3D Tools CAD
+# 3D Tools CAD Documentation
 
-3D Tools CAD - браузерный CAD-инструмент для практичных моделей под 3D-печать. Цель проекта: дать простой workflow уровня "Figma для печатных моделей", без тяжёлой профессиональной CAD-сложности, но с точными размерами, hole-объектами, boolean-операциями и экспортом в форматы для печати.
+3D Tools CAD is a browser CAD tool for practical 3D-printable parts. It keeps a Fusion-inspired workflow where it helps, but removes heavy professional workspace scope.
 
-## Разделы
+## Sections
 
-- [Руководство пользователя](./user-guide.md)
-- [Архитектура](./architecture.md)
-- [Геометрическое ядро](./geometry-kernel.md)
-- [Форматы файлов и экспорт](./file-formats.md)
-- [Проверка печати](./printability.md)
-- [Разработка](./development.md)
+- [User guide](./user-guide.md)
+- [Fusion-inspired tool model](./fusion-tool-model.md)
+- [Architecture](./architecture.md)
+- [Geometry kernel](./geometry-kernel.md)
+- [File formats and export](./file-formats.md)
+- [Printability](./printability.md)
+- [Development](./development.md)
 - [Roadmap](./roadmap.md)
 
-## Быстрый старт
+## Quick Start
 
 ```bash
 npm install
 npm run dev
 ```
 
-Открой локальный адрес, который покажет Vite. Обычно это `http://localhost:5173`.
+Open the local URL shown by Vite, usually `http://localhost:5173`.
 
-## Главные принципы продукта
+## Product Principles
 
-- Все размеры задаются в миллиметрах.
-- Hole-объекты являются полноценной частью модели и применяются через boolean pipeline при export/bake.
-- 3MF является предпочтительным форматом для печати, STL и OBJ остаются для совместимости.
-- Параметры объектов хранятся отдельно от three.js viewport, чтобы UI не зависел от конкретного геометрического ядра.
-- Документация обновляется вместе с любым изменением функциональности.
+- All dimensions are millimeters.
+- The workspace starts empty.
+- Hole objects are first-class model objects and are applied through the boolean pipeline during export/bake.
+- 3MF is preferred for printing; STL and OBJ remain compatibility formats.
+- CAD object parameters are separate from the three.js viewport.
+- Documentation must be updated together with functionality changes.

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadFreshStore } from '../helpers/storeTestUtils';
 
 const context = await loadFreshStore();
-const { useCadStore, initialObjects, resetStore } = context;
+const { useCadStore, resetStore } = context;
 
 describe('store history suite', () => {
   beforeEach(() => resetStore());
@@ -17,13 +17,11 @@ describe('store history suite', () => {
   });
 
   it('supports undo and redo for add/update/delete operations', () => {
-    const originalName = useCadStore.getState().objects[0].name;
-
     useCadStore.getState().addPrimitive('box');
     useCadStore.getState().updateObject(useCadStore.getState().selectedIds[0], { name: 'Changed' });
     useCadStore.getState().deleteSelected();
 
-    expect(useCadStore.getState().objects).toHaveLength(initialObjects.length);
+    expect(useCadStore.getState().objects).toHaveLength(0);
 
     useCadStore.getState().undo();
     expect(useCadStore.getState().objects.some((object) => object.name === 'Changed')).toBe(true);
@@ -32,11 +30,10 @@ describe('store history suite', () => {
     expect(useCadStore.getState().objects.some((object) => object.name === 'Changed')).toBe(false);
 
     useCadStore.getState().undo();
-    expect(useCadStore.getState().objects).toHaveLength(initialObjects.length);
-    expect(useCadStore.getState().objects[0].name).toBe(originalName);
+    expect(useCadStore.getState().objects).toHaveLength(0);
 
     useCadStore.getState().redo();
-    expect(useCadStore.getState().objects).toHaveLength(initialObjects.length + 1);
+    expect(useCadStore.getState().objects).toHaveLength(1);
   });
 
   it('clears redo future when a new history operation happens', () => {

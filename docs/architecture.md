@@ -1,4 +1,4 @@
-# Архитектура
+# Architecture
 
 ## Stack
 
@@ -13,7 +13,7 @@
 - fflate
 - @jscadui/3mf-export
 
-## Основные директории
+## Directories
 
 ```text
 src/
@@ -29,40 +29,59 @@ src/
     units.ts
   store/
     cadStore.ts
+  test/
+    setup.ts
+    testRegistry.ts
+    helpers/
+    suites/
   ui/
     App.tsx
     Viewport.tsx
   types.ts
 ```
 
-## Слои
+## UI Layer
 
-### UI layer
-
-Файлы:
+Files:
 
 - `src/ui/App.tsx`
 - `src/ui/Viewport.tsx`
 - `src/styles.css`
 
-`App.tsx` отвечает за панели, кнопки, inspector, import/export actions и hotkeys.
+`App.tsx` owns the Fusion-like application shell:
 
-`Viewport.tsx` отвечает за:
+- title bar;
+- workspace tabs;
+- compact active-workspace ribbon;
+- Browser/outliner;
+- Viewport region;
+- Inspector;
+- import/export actions;
+- hotkeys.
 
-- создание three.js scene;
-- камеру;
+Current workspace tabs:
+
+- `Sketch`: thin 2D-like profiles and SVG import;
+- `Solid`: 3D primitives, cutters, Extrude, Press Pull, Fillet;
+- `Arrange`: transform, pattern, mirror, align, distribute;
+- `Inspect`: printability, bake, export.
+
+`Viewport.tsx` owns:
+
+- three.js scene;
+- camera;
 - orbit/fly navigation;
-- selection;
+- object selection;
 - TransformControls;
-- синхронизацию `CadObject` -> `THREE.Mesh`.
+- synchronization from `CadObject` state to `THREE.Mesh`.
 
-### State layer
+## State Layer
 
-Файл:
+File:
 
 - `src/store/cadStore.ts`
 
-Zustand store хранит:
+Zustand stores:
 
 - objects;
 - selectedIds;
@@ -73,16 +92,32 @@ Zustand store хранит:
 - printIssues;
 - undo/redo history.
 
-Все операции моделирования проходят через store actions. Это важно: viewport не должен становиться источником истины.
+The store starts with an empty object list. New modeling operations must be added as store actions so project export/import, undo/redo, tests, and viewport stay consistent.
 
-### CAD object layer
+Current modeling actions include:
 
-Файлы:
+- addPrimitive;
+- addImportedSvg;
+- importProject;
+- updateObject;
+- duplicateSelected;
+- mirrorSelected;
+- repeatSelected;
+- extrudeSelected;
+- pressPullSelected;
+- filletSelected;
+- alignSelected;
+- distributeSelected;
+- bakeBooleanResult.
+
+## CAD Object Layer
+
+Files:
 
 - `src/types.ts`
 - `src/lib/cadObjects.ts`
 
-`CadObject` хранит параметры объекта в миллиметрах:
+`CadObject` stores millimeter-based parameters:
 
 - kind;
 - role;
@@ -96,21 +131,21 @@ Zustand store хранит:
 - svgMarkup;
 - mesh.
 
-Роли:
+Roles:
 
-- `solid`: обычная геометрия;
-- `hole`: cutter для boolean pipeline;
-- `template`: объект/группа-заготовка.
+- `solid`: normal printable geometry;
+- `hole`: cutter used by the boolean pipeline;
+- `reference`: helper geometry that is not a preset or startup object.
 
-### Geometry layer
+## Geometry Layer
 
-Файл:
+File:
 
 - `src/lib/geometry.ts`
 
-Создаёт `THREE.BufferGeometry` из `CadObject`.
+Creates `THREE.BufferGeometry` from `CadObject`.
 
-Поддерживает:
+Supported geometry:
 
 - box;
 - rounded box;
@@ -119,57 +154,43 @@ Zustand store хранит:
 - sphere;
 - wedge;
 - slot;
+- screw hole;
+- magnet pocket;
 - text;
 - svg;
 - baked mesh.
 
-### Boolean/export layer
+## Boolean and Export Layer
 
-Файлы:
+Files:
 
 - `src/lib/manifoldKernel.ts`
 - `src/lib/csg.ts`
 - `src/lib/exporters.ts`
 
-Порядок:
+Pipeline:
 
-1. UI вызывает export или bake.
-2. `exporters.ts` вызывает `buildRobustBooleanGroup`.
-3. `csg.ts` сначала пробует Manifold WASM.
-4. Если Manifold не принимает сетку, используется mesh-CSG fallback.
-5. Результат экспортируется в 3MF/STL/OBJ или превращается в baked mesh.
+1. UI calls export or bake.
+2. `exporters.ts` calls `buildRobustBooleanGroup`.
+3. `csg.ts` tries Manifold WASM first.
+4. If Manifold rejects a mesh, mesh-CSG fallback is used.
+5. Result is exported to 3MF/STL/OBJ or converted to a baked mesh.
 
-## Единицы измерения
+## Units
 
-Внутренний UI и CAD state работают в миллиметрах.
+CAD state and UI are millimeters.
 
-three.js scene использует метры/scene units:
+three.js scene units use:
 
 ```ts
 1 mm = 0.001 scene units
 ```
 
-Перед экспортом STL/OBJ/3MF геометрия масштабируется обратно в миллиметры.
+Export scales geometry back to millimeters.
 
-## Undo/redo
+## Tests
 
-Undo/redo хранит snapshots:
-
-- objects;
-- selectedIds.
-
-История ограничена 80 состояниями.
-
-Не следует сохранять в history:
-
-- camera position;
-- viewport-only state;
-- transient warnings;
-- UI hover/focus.
-
-## Automated tests
-
-Vitest tests live in a dedicated suite folder:
+Vitest tests live in:
 
 ```text
 src/test/testRegistry.ts
@@ -177,9 +198,7 @@ src/test/helpers/*.ts
 src/test/suites/*.test.ts
 ```
 
-Tests run in the Vitest `node` environment. `src/test/setup.ts` provides small DOM stubs for `document.createElement`, anchor clicks, and `URL.createObjectURL`, because export functions rely on browser download APIs. This avoids jsdom typed-array quirks in zip tests while still exercising the export code.
-
-`src/test/testRegistry.ts` is the main index of test suites and coverage areas. `src/test/suites/registry.test.ts` checks that the registry points to real suite files.
+`src/test/testRegistry.ts` is the main suite index. `registry.test.ts` checks that every registered suite file exists.
 
 Run:
 
@@ -187,6 +206,6 @@ Run:
 npm test
 ```
 
-## Правило архитектуры
+## Architecture Rule
 
-Новые CAD-функции должны добавляться через параметры `CadObject` и store actions. Не добавляй поведение напрямую в mesh без отражения в state, иначе project export/import и undo/redo начнут расходиться с viewport.
+CAD state is the source of truth. Do not add behavior only to a three.js mesh if it affects model data. Put model-changing behavior in store actions and cover it with tests.

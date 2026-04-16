@@ -19,7 +19,7 @@ const DEFAULT_SIZE: Record<PrimitiveKind, Vec3> = {
 const DEFAULT_COLOR: Record<CadObject['role'], string> = {
   solid: '#58a6ff',
   hole: '#ff5a66',
-  template: '#9ee493',
+  reference: '#9ee493',
 };
 
 const SOLID_LABELS: Record<PrimitiveKind, string> = {

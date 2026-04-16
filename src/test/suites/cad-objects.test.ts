@@ -47,13 +47,13 @@ describe('CAD objects suite', () => {
   it('allows explicit overrides', () => {
     const object = createCadObject('box', {
       name: 'Custom',
-      role: 'template',
+      role: 'reference',
       dimensions: { x: 1, y: 2, z: 3 },
       position: { x: 4, y: 5, z: 6 },
     });
 
     expect(object.name).toBe('Custom');
-    expect(object.role).toBe('template');
+    expect(object.role).toBe('reference');
     expect(object.dimensions).toEqual({ x: 1, y: 2, z: 3 });
     expect(object.position).toEqual({ x: 4, y: 5, z: 6 });
   });

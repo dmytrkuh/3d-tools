@@ -1,6 +1,16 @@
 import { create } from 'zustand';
 import * as THREE from 'three';
-import type { Axis, BooleanOperation, CadObject, CameraMode, PrimitiveKind, PrintIssue, TemplateKind, TransformMode } from '../types';
+import type {
+  Axis,
+  BooleanOperation,
+  CadObject,
+  CameraMode,
+  ExtrudeOperation,
+  PressPullTarget,
+  PrimitiveKind,
+  PrintIssue,
+  TransformMode,
+} from '../types';
 import { cloneCadObject, createCadObject } from '../lib/cadObjects';
 import { clampMm, snapMm } from '../lib/units';
 import { buildRobustBooleanGroup } from '../lib/csg';
@@ -19,7 +29,6 @@ type CadState = {
   booleanMode: BooleanOperation;
   printIssues: PrintIssue[];
   addPrimitive: (kind: PrimitiveKind) => void;
-  addTemplate: (kind: TemplateKind) => void;
   addImportedSvg: (svgMarkup: string, name?: string) => void;
   importProject: (objects: CadObject[]) => void;
   selectObject: (id: string | null, append?: boolean) => void;
@@ -29,6 +38,9 @@ type CadState = {
   duplicateSelected: () => void;
   mirrorSelected: (axis: Axis) => void;
   repeatSelected: (axis: Axis, count: number, gapMm: number) => void;
+  extrudeSelected: (distanceMm: number, operation?: ExtrudeOperation) => void;
+  pressPullSelected: (distanceMm: number, target?: PressPullTarget, axis?: Axis) => void;
+  filletSelected: (radiusMm: number) => void;
   alignSelected: (axis: Axis, side: 'min' | 'center' | 'max') => void;
   distributeSelected: (axis: Axis) => void;
   setTransformMode: (mode: TransformMode) => void;
@@ -47,23 +59,11 @@ type CadSnapshot = {
   selectedIds: string[];
 };
 
-const starterObjects = [
-  createCadObject('roundedBox', {
-    name: 'Base plate',
-    dimensions: { x: 90, y: 12, z: 60 },
-    position: { x: 0, y: 6, z: 0 },
-    bevel: 3,
-  }),
-  createCadObject('screwHole', {
-    name: 'M3 hole',
-    position: { x: -28, y: 16, z: -18 },
-    dimensions: { x: 3.4, y: 3.4, z: 24 },
-  }),
-];
+const starterObjects: CadObject[] = [];
 
 export const useCadStore = create<CadState>((set, get) => ({
   objects: starterObjects,
-  selectedIds: [starterObjects[0].id],
+  selectedIds: [],
   past: [],
   future: [],
   transformMode: 'translate',
@@ -78,14 +78,6 @@ export const useCadStore = create<CadState>((set, get) => ({
     set((state) => withHistory(state, {
       objects: [...state.objects, object],
       selectedIds: [object.id],
-    }));
-  },
-
-  addTemplate: (kind) => {
-    const objects = createTemplate(kind);
-    set((state) => withHistory(state, {
-      objects: [...state.objects, ...objects],
-      selectedIds: objects.map((object) => object.id),
     }));
   },
 
@@ -180,6 +172,54 @@ export const useCadStore = create<CadState>((set, get) => ({
     set((state) => withHistory(state, {
       objects: [...state.objects, ...copies],
       selectedIds: [source.id, ...copies.map((object) => object.id)],
+    }));
+  },
+
+  extrudeSelected: (distanceMm, operation = 'newBody') => {
+    const ids = new Set(get().selectedIds);
+    if (!ids.size || !Number.isFinite(distanceMm) || distanceMm === 0) return;
+    set((state) => withHistory(state, {
+      objects: state.objects.map((object) => {
+        if (!ids.has(object.id) || object.kind === 'sphere') return object;
+        const base = object.position.y - object.dimensions.y / 2;
+        const direction = Math.sign(distanceMm);
+        const nextHeight = clampMm(Math.abs(distanceMm));
+        const role = operation === 'cut' ? 'hole' : object.role === 'hole' ? 'hole' : 'solid';
+        return {
+          ...object,
+          role,
+          color: operation === 'cut' ? '#ff5a66' : object.color,
+          dimensions: { ...object.dimensions, y: nextHeight },
+          position: { ...object.position, y: base + (nextHeight / 2) * direction },
+        };
+      }),
+    }));
+  },
+
+  pressPullSelected: (distanceMm, target = 'face', axis = 'y') => {
+    const ids = new Set(get().selectedIds);
+    if (!ids.size || !Number.isFinite(distanceMm) || distanceMm === 0) return;
+    set((state) => withHistory(state, {
+      objects: state.objects.map((object) => {
+        if (!ids.has(object.id)) return object;
+        if (target === 'profile') return extrudedObject(object, distanceMm, 'newBody');
+        if (target === 'edge') return filletedObject(object, Math.max(0, (object.bevel ?? 0) + distanceMm));
+        const nextSize = clampMm(object.dimensions[axis] + distanceMm);
+        const delta = nextSize - object.dimensions[axis];
+        return {
+          ...object,
+          dimensions: { ...object.dimensions, [axis]: nextSize },
+          position: { ...object.position, [axis]: object.position[axis] + delta / 2 },
+        };
+      }),
+    }));
+  },
+
+  filletSelected: (radiusMm) => {
+    const ids = new Set(get().selectedIds);
+    if (!ids.size || !Number.isFinite(radiusMm)) return;
+    set((state) => withHistory(state, {
+      objects: state.objects.map((object) => (ids.has(object.id) ? filletedObject(object, radiusMm) : object)),
     }));
   },
 
@@ -309,8 +349,11 @@ function selectedObjects(state: Pick<CadState, 'objects' | 'selectedIds'>) {
 }
 
 function normalizeObject(object: CadObject): CadObject {
+  const legacyRole = object.role as CadObject['role'] | 'template';
+  const role = legacyRole === 'template' ? 'reference' : legacyRole;
   return {
     ...object,
+    role,
     position: {
       x: snapMm(object.position.x),
       y: snapMm(object.position.y),
@@ -322,6 +365,32 @@ function normalizeObject(object: CadObject): CadObject {
       z: clampMm(object.dimensions.z),
     },
   };
+}
+
+function extrudedObject(object: CadObject, distanceMm: number, operation: ExtrudeOperation): CadObject {
+  if (object.kind === 'sphere') return object;
+  const base = object.position.y - object.dimensions.y / 2;
+  const direction = Math.sign(distanceMm);
+  const nextHeight = clampMm(Math.abs(distanceMm));
+  const role = operation === 'cut' ? 'hole' : object.role === 'hole' ? 'hole' : 'solid';
+  return {
+    ...object,
+    role,
+    color: operation === 'cut' ? '#ff5a66' : object.color,
+    dimensions: { ...object.dimensions, y: nextHeight },
+    position: { ...object.position, y: base + (nextHeight / 2) * direction },
+  };
+}
+
+function filletedObject(object: CadObject, radiusMm: number): CadObject {
+  const radius = Math.min(clampMm(radiusMm), Math.max(0.1, Math.min(object.dimensions.x, object.dimensions.y, object.dimensions.z) / 2));
+  if (object.kind === 'box') {
+    return { ...object, kind: 'roundedBox', bevel: radius };
+  }
+  if (object.kind === 'roundedBox' || object.kind === 'text' || object.kind === 'svg') {
+    return { ...object, bevel: radius };
+  }
+  return object;
 }
 
 function edge(object: CadObject, axis: Axis, side: 'min' | 'center' | 'max') {
@@ -396,85 +465,4 @@ function checkObject(object: CadObject): PrintIssue[] {
   }
 
   return issues;
-}
-
-function createTemplate(kind: TemplateKind): CadObject[] {
-  if (kind === 'boxWithLid') {
-    return [
-      createCadObject('roundedBox', {
-        name: 'Open box body',
-        dimensions: { x: 90, y: 45, z: 60 },
-        position: { x: 0, y: 22.5, z: 0 },
-        bevel: 2,
-      }),
-      createCadObject('roundedBox', {
-        name: 'Lid',
-        dimensions: { x: 94, y: 6, z: 64 },
-        position: { x: 0, y: 54, z: 0 },
-        bevel: 2,
-      }),
-    ];
-  }
-
-  if (kind === 'hook') {
-    return [
-      createCadObject('roundedBox', {
-        name: 'Hook back plate',
-        dimensions: { x: 32, y: 6, z: 70 },
-        position: { x: 0, y: 35, z: 0 },
-        bevel: 2,
-      }),
-      createCadObject('roundedBox', {
-        name: 'Hook arm',
-        dimensions: { x: 45, y: 8, z: 12 },
-        position: { x: 22, y: 18, z: 0 },
-        bevel: 3,
-      }),
-    ];
-  }
-
-  if (kind === 'lBracket') {
-    return [
-      createCadObject('box', {
-        name: 'L bracket vertical',
-        dimensions: { x: 8, y: 60, z: 50 },
-        position: { x: -21, y: 30, z: 0 },
-      }),
-      createCadObject('box', {
-        name: 'L bracket base',
-        dimensions: { x: 50, y: 8, z: 50 },
-        position: { x: 0, y: 4, z: 0 },
-      }),
-    ];
-  }
-
-  if (kind === 'cableClip') {
-    return [
-      createCadObject('roundedBox', {
-        name: 'Cable clip body',
-        dimensions: { x: 34, y: 18, z: 18 },
-        position: { x: 0, y: 9, z: 0 },
-        bevel: 2,
-      }),
-      createCadObject('slot', {
-        name: 'Cable channel',
-        dimensions: { x: 22, y: 10, z: 24 },
-        position: { x: 0, y: 12, z: 0 },
-      }),
-    ];
-  }
-
-  return [
-    createCadObject('roundedBox', {
-      name: 'Organizer tray',
-      dimensions: { x: 120, y: 28, z: 80 },
-      position: { x: 0, y: 14, z: 0 },
-      bevel: 3,
-    }),
-    createCadObject('slot', {
-      name: 'Divider groove',
-      dimensions: { x: 4, y: 12, z: 76 },
-      position: { x: -20, y: 26, z: 0 },
-    }),
-  ];
 }
