@@ -1,42 +1,74 @@
-# 3D Tools MVP
+# 3D Tools CAD
 
-Простой браузерный open-source прототип CAD-инструмента для бытового 3D-моделирования.
+Open-source browser CAD tool for practical 3D-printable models.
 
-## Что уже реализовано
+The goal is a simplified Fusion 360-style workflow for everyday printable parts: primitives, exact millimeter dimensions, hole objects, boolean operations, templates, printability hints, and export to print-friendly formats.
 
-- Базовая сцена с сеткой и осями.
-- Навигация Orbit + переключаемый Fly режим (WASD).
-- Примитивы: box, rounded box, cylinder, tube, sphere, wedge.
-- Трансформации: move / rotate / scale через gizmo.
-- Duplicate, mirror, delete.
-- Snap для трансформаций.
-- Ввод точных позиций и габаритов в миллиметрах.
-- Экспорт STL и OBJ.
+## Current Status
 
-## Локальный запуск
+Implemented:
 
-Откройте `index.html` через локальный статический сервер, например:
+- Vite + React + TypeScript app.
+- three.js viewport with orbit/fly navigation.
+- CAD objects stored in millimeters.
+- Primitives: box, rounded box, cylinder, tube, sphere, wedge, text.
+- Hole objects: screw hole, slot, magnet pocket.
+- SVG import and project JSON import/export.
+- Templates: box + lid, hook, L bracket, cable clip, organizer.
+- Move, rotate, scale, duplicate, mirror, repeat.
+- Align and distribute helpers.
+- Manifold WASM boolean kernel with mesh-CSG fallback.
+- Boolean export and bake.
+- Export 3MF, STL, OBJ, and project JSON.
+- Basic printability checks.
+- Undo/redo.
+
+## Documentation
+
+Start here:
+
+- [Documentation hub](./docs/README.md)
+- [User guide](./docs/user-guide.md)
+- [Architecture](./docs/architecture.md)
+- [Geometry kernel](./docs/geometry-kernel.md)
+- [File formats and export](./docs/file-formats.md)
+- [Printability](./docs/printability.md)
+- [Development](./docs/development.md)
+- [Roadmap](./docs/roadmap.md)
+- [Contributing](./CONTRIBUTING.md)
+
+## Development
+
+Install dependencies:
 
 ```bash
-python3 -m http.server 4173
+npm install
 ```
 
-Затем откройте `http://localhost:4173`.
+Run dev server:
 
-## Горячие клавиши
+```bash
+npm run dev
+```
 
-- `G` — move
-- `R` — rotate
-- `S` — scale
-- `Ctrl/Cmd + D` — duplicate
-- `M` — mirror X
-- `Delete` — удалить объект
-- `` ` `` или `~` — fly mode
+Build:
 
-## Дальше по плану
+```bash
+npm run build
+```
 
-- Булевы операции (union / subtract / intersect) на robust-ядре.
-- Hole-объекты, слоты, крепёжные шаблоны.
-- Array/repeat.
-- SVG import.
-- Printability checks.
+Run tests:
+
+```bash
+npm test
+```
+
+Tests are organized under `src/test/suites` and indexed by `src/test/testRegistry.ts`.
+
+## Documentation Rule
+
+Documentation must be updated together with functionality changes.
+
+If a change affects user behavior, UX, architecture, file formats, import/export, geometry kernel, printability checks, hotkeys, or development workflow, update the relevant documentation in the same change.
+
+See [Contributing](./CONTRIBUTING.md) and [Development](./docs/development.md).

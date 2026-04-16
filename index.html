@@ -3,66 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>3D Tools MVP</title>
-    <link rel="stylesheet" href="./src/styles.css" />
+    <title>3D Tools CAD</title>
   </head>
   <body>
-    <aside class="panel">
-      <h1>3D Tools MVP</h1>
-      <section>
-        <h2>Примитивы</h2>
-        <div class="grid">
-          <button data-primitive="box">Box</button>
-          <button data-primitive="roundedBox">Rounded Box</button>
-          <button data-primitive="cylinder">Cylinder</button>
-          <button data-primitive="tube">Tube</button>
-          <button data-primitive="sphere">Sphere</button>
-          <button data-primitive="wedge">Wedge</button>
-        </div>
-      </section>
-
-      <section>
-        <h2>Трансформации</h2>
-        <div class="grid">
-          <button id="mode-move">Move (G)</button>
-          <button id="mode-rotate">Rotate (R)</button>
-          <button id="mode-scale">Scale (S)</button>
-          <button id="duplicate">Duplicate (Ctrl+D)</button>
-          <button id="mirror">Mirror X (M)</button>
-          <button id="delete">Delete (Del)</button>
-        </div>
-      </section>
-
-      <section>
-        <h2>Параметры (мм)</h2>
-        <label>X <input id="x" type="number" step="1" /></label>
-        <label>Y <input id="y" type="number" step="1" /></label>
-        <label>Z <input id="z" type="number" step="1" /></label>
-        <label>W <input id="w" type="number" step="1" min="1" /></label>
-        <label>H <input id="h" type="number" step="1" min="1" /></label>
-        <label>D <input id="d" type="number" step="1" min="1" /></label>
-        <button id="apply-size">Применить размеры</button>
-      </section>
-
-      <section>
-        <h2>Экспорт</h2>
-        <div class="grid">
-          <button id="export-stl">Export STL</button>
-          <button id="export-obj">Export OBJ</button>
-        </div>
-      </section>
-
-      <section>
-        <h2>Навигация</h2>
-        <ul>
-          <li>MMB orbit, Shift+MMB pan, Wheel zoom</li>
-          <li>~: Fly mode (WASD + mouse look)</li>
-          <li>Snap to grid: 1 мм</li>
-        </ul>
-      </section>
-    </aside>
-    <canvas id="viewport"></canvas>
-
-    <script type="module" src="./src/main.js"></script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
