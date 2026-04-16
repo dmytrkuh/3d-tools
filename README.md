@@ -1,54 +1,53 @@
 # 3D Tools CAD
 
-Open-source browser CAD tool for practical 3D-printable models.
+**Browser CAD for practical 3D-printable parts.**
 
-The goal is a simplified Fusion 360-style workflow for everyday printable parts: primitives, exact millimeter dimensions, hole objects, boolean operations, templates, printability hints, and export to print-friendly formats.
+3D Tools CAD is an open-source modeling tool focused on everyday printable objects: brackets, holders, boxes, lids, organizers, labels, cable clips, fixtures, and small functional parts.
 
-## Current Status
+![3D Tools CAD hero](./docs/assets/readme-hero.png)
 
-Implemented:
+## Why This Exists
 
-- Vite + React + TypeScript app.
-- three.js viewport with orbit/fly navigation.
-- CAD objects stored in millimeters.
-- Primitives: box, rounded box, cylinder, tube, sphere, wedge, text.
-- Hole objects: screw hole, slot, magnet pocket.
-- SVG import and project JSON import/export.
-- Templates: box + lid, hook, L bracket, cable clip, organizer.
-- Move, rotate, scale, duplicate, mirror, repeat.
-- Align and distribute helpers.
-- Manifold WASM boolean kernel with mesh-CSG fallback.
-- Boolean export and bake.
-- Export 3MF, STL, OBJ, and project JSON.
-- Basic printability checks.
-- Undo/redo.
+Most household 3D-printing work does not need a full professional CAD suite. It needs fast primitives, exact millimeter dimensions, reliable holes, simple boolean operations, templates, and export that slicers understand.
 
-## Documentation
+3D Tools CAD aims to be a simpler Fusion 360-style workflow in the browser:
 
-Start here:
+- model in millimeters;
+- place solids and hole objects;
+- use boolean subtract/union/intersect;
+- bake the result when needed;
+- export to 3MF, STL, OBJ, or editable project JSON.
 
-- [Documentation hub](./docs/README.md)
-- [User guide](./docs/user-guide.md)
-- [Architecture](./docs/architecture.md)
-- [Geometry kernel](./docs/geometry-kernel.md)
-- [File formats and export](./docs/file-formats.md)
-- [Printability](./docs/printability.md)
-- [Development](./docs/development.md)
-- [Roadmap](./docs/roadmap.md)
-- [Contributing](./CONTRIBUTING.md)
+## Current Capabilities
 
-## Development
+| Area | Status |
+| --- | --- |
+| Browser app | Vite + React + TypeScript |
+| 3D viewport | three.js with orbit and fly navigation |
+| Modeling units | Millimeters in CAD state and UI |
+| Primitives | Box, rounded box, cylinder, tube, sphere, wedge, text |
+| Hole objects | Screw hole, slot, magnet pocket |
+| Templates | Box + lid, hook, L bracket, cable clip, organizer |
+| Transforms | Move, rotate, scale, duplicate, mirror, repeat |
+| Layout tools | Align and distribute helpers |
+| Boolean kernel | Manifold WASM with mesh-CSG fallback |
+| Import | SVG, project JSON |
+| Export | 3MF, STL, OBJ, project JSON |
+| Print checks | Thin details, below-bed objects, open edges, non-manifold edges, heavy meshes, overhang hints |
+| History | Undo / redo |
+| Tests | Vitest suite registry with 82 tests |
 
-Install dependencies:
+## Quick Start
 
 ```bash
 npm install
+npm run dev
 ```
 
-Run dev server:
+Open the Vite URL, usually:
 
-```bash
-npm run dev
+```text
+http://localhost:5173
 ```
 
 Build:
@@ -63,12 +62,90 @@ Run tests:
 npm test
 ```
 
-Tests are organized under `src/test/suites` and indexed by `src/test/testRegistry.ts`.
+## Core Workflow
+
+1. Add a solid primitive or template.
+2. Set exact size and position in millimeters.
+3. Add hole objects for screw holes, slots, pockets, or cutouts.
+4. Choose boolean mode, usually `Subtract holes`.
+5. Export directly or use `Bake boolean result`.
+6. Run printability checks before slicing.
+7. Save editable work as project JSON.
+
+## Navigation
+
+- `G`: move
+- `R`: rotate
+- `S`: scale
+- `F`: orbit/fly mode
+- `W / A / S / D`: fly movement
+- `Q / E`: fly down/up
+- `Shift`: faster fly
+- `Delete`: delete selected
+- `Ctrl+D`: duplicate
+- `Ctrl+Z`: undo
+- `Ctrl+Y` or `Ctrl+Shift+Z`: redo
+
+## Project Structure
+
+```text
+src/
+  lib/        CAD object factories, geometry, CSG, exporters, units
+  store/      Zustand CAD state and modeling actions
+  ui/         React UI and three.js viewport
+  test/       Vitest setup, registry, helpers, and suites
+docs/         User and developer documentation
+```
+
+## Documentation
+
+- [Documentation hub](./docs/README.md)
+- [User guide](./docs/user-guide.md)
+- [Architecture](./docs/architecture.md)
+- [Geometry kernel](./docs/geometry-kernel.md)
+- [File formats and export](./docs/file-formats.md)
+- [Printability](./docs/printability.md)
+- [Development](./docs/development.md)
+- [Roadmap](./docs/roadmap.md)
+- [Contributing](./CONTRIBUTING.md)
+
+## Testing
+
+Tests live in:
+
+```text
+src/test/suites
+```
+
+The suite registry lives in:
+
+```text
+src/test/testRegistry.ts
+```
+
+Current coverage includes CAD object creation, geometry generation, printability analysis, mesh serialization, store actions/history, exporters, unit conversion, and registry integrity.
 
 ## Documentation Rule
 
 Documentation must be updated together with functionality changes.
 
-If a change affects user behavior, UX, architecture, file formats, import/export, geometry kernel, printability checks, hotkeys, or development workflow, update the relevant documentation in the same change.
+If a change affects user behavior, UX, architecture, file formats, import/export, geometry kernel, printability checks, hotkeys, tests, or development workflow, update the relevant documentation in the same change.
 
-See [Contributing](./CONTRIBUTING.md) and [Development](./docs/development.md).
+## Roadmap Snapshot
+
+Next high-impact areas:
+
+- configurable repeat/array dialog;
+- mirror by X/Y/Z and mirror planes;
+- workplane presets and place-on-face workflow;
+- object visibility/lock/grouping;
+- improved SVG cleanup;
+- screw and magnet presets;
+- stronger wall-thickness and overhang analysis;
+- import STL/OBJ as editable mesh objects.
+
+See the full [Roadmap](./docs/roadmap.md).
+
+## License
+
+License is not set yet. Add one before publishing the repository publicly.
